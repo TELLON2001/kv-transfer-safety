@@ -8,5 +8,5 @@ section. Newest entries at the bottom of each day.
 - Phase 1 open: IP-clause check done; related-work table filled; GPU access next.
 - Reminder (Phase 2): once the mapper reproduces one accuracy number, pin the exact
   environment with `pip freeze > requirements.lock.txt` and commit it, alongside the
-  `kvtransfer` commit SHA — that lock file is the reproducible env, `requirements.txt`
+  `kvtransfer` commit SHA; that lock file is the reproducible env, `requirements.txt`
   stays the loose spec.

@@ -1,4 +1,4 @@
-# Phase 2 — Reproduce the mapper (run kvtransfer on Qwen3-1.7B -> 4B,
+# Phase 2: Reproduce the mapper (run kvtransfer on Qwen3-1.7B -> 4B,
 # reproduce one reported accuracy number before measuring anything new).
 #
 # Install:  pip install -r requirements.txt

@@ -5,7 +5,7 @@ All entries verified against source on **2026-09-27**. BibTeX in
 
 ## Cross-model KV transfer (the methods under audit)
 
-### Heo et al. 2026 — the base method
+### Heo et al. 2026: the base method
 **Cross-Model KV Cache Transfer in LLM Families: A Closed-Form Linear Mapping for
 Prefill Reuse.** Taekyung Heo, Rasoul Shafipour, Ritchie Zhao, Maximilian Golub,
 Mohammad Mahdi Kamani, Ritika Borkar, Makesh Tarun Chandran, Pantea Zardoshti,
@@ -24,10 +24,10 @@ Closed-form affine interface for online deployment; restricts each target head t
 single source head, weights reconstruction error by attention sensitivity. Improves
 on Full-Head Mapping in speed and storage.
 
-### C2C 2026 — foundational citation
+### C2C 2026: foundational citation
 **Cache-to-Cache: Direct Semantic Communication Between Large Language Models.**
 Tianyu Fu, Zihan Min, Hanling Zhang, Jichao Yan, Guohao Dai, Wanli Ouyang, Yu Wang.
-arXiv:[2510.03215](https://arxiv.org/abs/2510.03215) — ICLR 2026.
+arXiv:[2510.03215](https://arxiv.org/abs/2510.03215), ICLR 2026.
 LLMs exchange information directly via KV-cache (learned projection + fusion)
 instead of text. Reports 8.5–10.5% accuracy over individual models, ~2.0× latency
 speedup. Code: [`thu-nics/C2C`](https://github.com/thu-nics/C2C).
@@ -45,12 +45,12 @@ arXiv:[2601.06123](https://arxiv.org/abs/2601.06123) (Jan 2026).
 Augments each model with adapters that translate its KV state into and out of a
 shared latent space, giving a high-bandwidth cross-model channel without changing
 pre-trained weights; demonstrated on Gemma-2, including soft-prompt/skill transfer.
-_Overlap: low — a learned, trained channel across architectures, not the prefill-skip
+_Overlap: low; a learned, trained channel across architectures, not the prefill-skip
 transfer this project audits._
 
 ## Auditing / integrity / defense of shared caches
 
-### When Does Latent Communication Pay? — source of the mismatched-cache control
+### When Does Latent Communication Pay? (source of the mismatched-cache control)
 **A Causal Audit of Relayed KV Caches in Multi-Agent LLMs.** Jiaming Cheng,
 Subhransu Das, Rajiv Ramnath. arXiv:[2608.04893](https://arxiv.org/abs/2608.04893) (Aug 2026).
 Tests whether gains depend on cache *content* vs. mere presence, using mismatched,

@@ -19,7 +19,7 @@ evidence the optimization is safe.
 
 **Scope:** the mapper's eligibility check (matched KV head count and head
 dimension, shared tokenizer) restricts this to within-family pairs, so the
-headline claim is about within-family transfer — stated as a limitation up front.
+headline claim is about within-family transfer, stated as a limitation up front.
 
 ## Timeline
 
@@ -41,17 +41,17 @@ Targets: NeurIPS / ICLR / MLSys workshops (check deadlines once the pilot works)
 Each phase ends with one concrete artifact, so a busy week stalls the project
 without losing it.
 
-- **Phase 1 — Setup (wk 1–2):** IP clause + personal hardware/accounts/time;
+- **Phase 1, Setup (wk 1–2):** IP clause + personal hardware/accounts/time;
   secure a 24 GB+ GPU; read CacheBridge, Heo et al., LCGuard, "When Latent Agents
   Lie"; repo + research log + Scholar alerts on C2C and Heo et al.
-- **Phase 2 — Reproduce (wk 3–4):** run `kvtransfer` on Qwen3-1.7B→4B; reproduce
+- **Phase 2, Reproduce (wk 3–4):** run `kvtransfer` on Qwen3-1.7B→4B; reproduce
   one reported accuracy number before measuring anything new.
-- **Phase 3 — Pilot (wk 5–6):** 200 harmful + 200 benign prompts, one pair,
+- **Phase 3, Pilot (wk 5–6):** 200 harmful + 200 benign prompts, one pair,
   native vs. mapped; hand-check 50 outputs against the judge.
-- **Phase 4 — Full study (wk 7–12):** 2–3 more within-family pairs, mismatched-
+- **Phase 4, Full study (wk 7–12):** 2–3 more within-family pairs, mismatched-
   cache control, jailbreak-wrapped prompts; bootstrap CIs on every number, plus a
   power calculation so the go/no-go and any null result aren't decided by noise.
-- **Phase 5 — Write (wk 13–16):** abstract + main figure first; outside feedback
+- **Phase 5, Write (wk 13–16):** abstract + main figure first; outside feedback
   two weeks before deadline.
 
 ## Experimental design
@@ -62,9 +62,9 @@ and prompts.
 **Models.** Start with Qwen3-1.7B→4B, then add pairs that pass the tool's
 eligibility check (matched KV head count and head dimension). Keep chat template,
 decoding settings (seed and greedy-vs-sampling included) and thinking mode fixed
-across every condition. Document the exact token layout — which tokens the sharer
+across every condition. Document the exact token layout (which tokens the sharer
 prefills, which the receiver decodes, and where system-prompt and chat-template
-tokens sit — since the interpretation depends on where the harmful instruction
+tokens sit), since the interpretation depends on where the harmful instruction
 lives in the shared cache.
 
 **Conditions.**
@@ -81,8 +81,8 @@ OR-Bench. Capability: the paper's benchmarks via lm-evaluation-harness.
 
 **Metrics.** Every output is first labeled refuse / comply / incoherent, so
 degraded-but-non-refusing generations aren't counted as compliance. Refusal rate,
-over-refusal rate, and capability retention — each defined relative to the
-native-prefill baseline on the same receiver — all with bootstrap CIs. Headline:
+over-refusal rate, and capability retention (each defined relative to the
+native-prefill baseline on the same receiver), all with bootstrap CIs. Headline:
 refusal retention ÷ capability retention, with both components always reported
 separately (the ratio is unstable when either denominator is small).
 
@@ -103,11 +103,11 @@ scored as compliance. Fix the judge before seeing results.
 
 Only after the full study confirms a gap:
 
-1. **Find the refusal direction** (Arditi et al., 2024) for the receiver — mean
+1. **Find the refusal direction** (Arditi et al., 2024) for the receiver: mean
    activation difference on harmful vs. harmless prompts.
-2. **Test the mechanism** — project receiver activations onto that direction under
+2. **Test the mechanism**: project receiver activations onto that direction under
    native vs. mapped caches; a shrinking projection means the mapper distorts refusal.
-3. **Try a fix** — constrain the mapper to preserve that direction, check refusal
+3. **Try a fix**: constrain the mapper to preserve that direction, check refusal
    recovers without hurting capability.
 
 ## Related-paper tracker
@@ -117,7 +117,7 @@ BibTeX: [`references.bib`](references.bib).
 
 | Paper | What it does | Overlap |
 | --- | --- | --- |
-| [CacheBridge](https://arxiv.org/abs/2609.00891) (Sep 2026) | Closed-form affine cross-model KV transfer | Second prefill-reuse mapper; capability-only eval — audit target for a generality check |
+| [CacheBridge](https://arxiv.org/abs/2609.00891) (Sep 2026) | Closed-form affine cross-model KV transfer | Second prefill-reuse mapper; capability-only eval, audit target for a generality check |
 | [Heo et al.](https://arxiv.org/abs/2608.03893) (Aug 2026) | Per-head ridge mapper, within-family, prefill reuse | Base method; capability-only eval |
 | [When Does Latent Communication Pay?](https://arxiv.org/abs/2608.04893) (Aug 2026) | Causal audit of relayed KV caches | Source of the mismatched-cache control |
 | [When Latent Agents Lie](https://arxiv.org/abs/2606.28958) (Jun 2026) | KV-cache integrity attacks, multi-agent | Adjacent: attacks, not transfer fidelity |
