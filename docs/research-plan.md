@@ -112,7 +112,8 @@ Only after the full study confirms a gap:
 
 ## Related-paper tracker
 
-All links verified 2026-09-27.
+All links verified 2026-09-27. Full entries: [`references.md`](references.md);
+BibTeX: [`references.bib`](references.bib).
 
 | Paper | What it does | Overlap |
 | --- | --- | --- |
