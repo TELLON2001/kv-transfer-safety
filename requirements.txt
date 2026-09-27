@@ -1,0 +1,37 @@
+# Phase 2 — Reproduce the mapper (run kvtransfer on Qwen3-1.7B -> 4B,
+# reproduce one reported accuracy number before measuring anything new).
+#
+# Install:  pip install -r requirements.txt
+# GPU:      install the CUDA build of torch for your driver (see pytorch.org)
+#           instead of the plain wheel below.
+# Freeze:   once the accuracy number reproduces, run `pip freeze > requirements.lock.txt`
+#           so the reproduction is pinned exactly.
+
+# --- core inference ---
+torch>=2.4                     # use the CUDA wheel matching your GPU driver
+transformers>=4.51            # Qwen3 support landed in 4.51
+accelerate>=0.34
+safetensors>=0.4
+huggingface_hub>=0.25
+
+# --- tokenizer backends (Qwen) ---
+tokenizers>=0.20
+sentencepiece>=0.2
+
+# --- calibration data + numerics (ridge mapper on FineWeb-Edu) ---
+datasets>=3.0
+numpy>=1.26
+scipy>=1.13                    # closed-form / ridge solve
+scikit-learn>=1.5             # only if the repo uses sklearn Ridge; drop otherwise
+
+# --- reproducing the accuracy number ---
+lm-eval>=0.4.3                 # lm-evaluation-harness
+
+# --- the mapper implementation (Heo et al.); not on PyPI ---
+# Install from source, pinned to a commit for reproducibility:
+#   pip install "git+https://github.com/Susmith4710/kvtransfer.git@<commit-sha>"
+# (record the SHA in research-log.md when you pin it)
+
+# --- utilities ---
+tqdm>=4.66
+pyyaml>=6.0                    # experiment configs in configs/
