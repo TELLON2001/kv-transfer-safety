@@ -16,8 +16,8 @@ receiver:
 # Fill the "expected" values from the model configs the first time, then they act as a guard.
 eligibility:
   require_shared_tokenizer: true
-  num_key_value_heads: null      # expected KV-head count (fill from config.json, must match)
-  head_dim: null                 # expected head dimension (fill, must match)
+  num_key_value_heads: 8         # verified 2026-09-27: sharer 8 == receiver 8
+  head_dim: 128                  # verified 2026-09-27: sharer 128 == receiver 128
 
 # Mapper (Heo et al. closed-form ridge). Confirm field names against the kvtransfer repo.
 mapper:
