@@ -38,6 +38,16 @@ Prajwal Raghunath, Eugene Wu. arXiv:[2605.22863](https://arxiv.org/abs/2605.2286
 Compressed latent channel that transmits a summary of information the target lacks,
 handling differing contexts between models. _Overlap: low._
 
+### Dery et al. 2026
+**Latent Space Communication via K-V Cache Alignment.** Lucio M. Dery, Zohar Yahav,
+Henry Prior, Qixuan Feng, Jiajun Shen, Arthur Szlam.
+arXiv:[2601.06123](https://arxiv.org/abs/2601.06123) (Jan 2026).
+Augments each model with adapters that translate its KV state into and out of a
+shared latent space, giving a high-bandwidth cross-model channel without changing
+pre-trained weights; demonstrated on Gemma-2, including soft-prompt/skill transfer.
+_Overlap: low — a learned, trained channel across architectures, not the prefill-skip
+transfer this project audits._
+
 ## Auditing / integrity / defense of shared caches
 
 ### When Does Latent Communication Pay? — source of the mismatched-cache control

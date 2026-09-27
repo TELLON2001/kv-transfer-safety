@@ -117,12 +117,13 @@ BibTeX: [`references.bib`](references.bib).
 
 | Paper | What it does | Overlap |
 | --- | --- | --- |
-| [CacheBridge](https://arxiv.org/abs/2609.00891) (Sep 2026) | Closed-form affine cross-model KV transfer | Unknown; read first |
+| [CacheBridge](https://arxiv.org/abs/2609.00891) (Sep 2026) | Closed-form affine cross-model KV transfer | Second prefill-reuse mapper; capability-only eval — audit target for a generality check |
 | [Heo et al.](https://arxiv.org/abs/2608.03893) (Aug 2026) | Per-head ridge mapper, within-family, prefill reuse | Base method; capability-only eval |
 | [When Does Latent Communication Pay?](https://arxiv.org/abs/2608.04893) (Aug 2026) | Causal audit of relayed KV caches | Source of the mismatched-cache control |
 | [When Latent Agents Lie](https://arxiv.org/abs/2606.28958) (Jun 2026) | KV-cache integrity attacks, multi-agent | Adjacent: attacks, not transfer fidelity |
 | [LCGuard](https://arxiv.org/abs/2605.22786) (May 2026) | Guarding KV sharing against leakage/attacks | Adjacent: defense, not refusal retention |
 | [Latent Cache Flow](https://arxiv.org/abs/2605.22863) (May 2026) | Compressed cache channel, cross-context | Low |
+| [Latent Space Communication via K-V Cache Alignment](https://arxiv.org/abs/2601.06123) (Jan 2026, Dery et al.) | Learned per-model adapters into a shared latent KV space, cross-architecture (Gemma-2) | Low; learned trained channel, not prefill-skip transfer |
 | [C2C](https://arxiv.org/abs/2510.03215) (ICLR 2026) | Learned KV projection/fusion between LLMs | Low; foundational citation |
 
 Code: [`kvtransfer`](https://github.com/Susmith4710/kvtransfer) (Heo et al. impl),
