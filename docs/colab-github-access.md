@@ -1,5 +1,9 @@
 # Cloning the private repo on Colab (fine-grained PAT)
 
+> Status: the repo is currently **public**, so `git clone` needs no token and this
+> doc is not needed. Keep it for when you flip the repo back to private before the
+> preprint.
+
 Colab needs credentials to clone a private repo. Use a **fine-grained** Personal
 Access Token scoped to this one repo, read-only.
 
