@@ -20,6 +20,10 @@ results/**
 models/
 hf_cache/
 
+# Local-only session handoff notes (never tracked)
+claude.md
+CLAUDE.md
+
 # Secrets
 .env
 *.key
