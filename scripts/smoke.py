@@ -31,27 +31,9 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import load_config
+from src.generation import chat_ids, eos_token_id, greedy_decode, start
 
 CONDITIONS = ("native", "mapped", "sharer")
-
-
-@torch.no_grad()
-def greedy_decode(model, logits, cache, seq, max_new_tokens: int, eos_id: int) -> list[int]:
-    """Greedy-decode from (last-position logits, cache covering `seq`). Shared by every condition."""
-    from kvtransfer.hf import forward_with_cache
-
-    dev = next(model.parameters()).device
-    seq = seq.to(dev)
-    new: list[int] = []
-    for _ in range(max_new_tokens):
-        nxt = logits[:, -1].argmax(-1)
-        new.append(int(nxt))
-        if int(nxt) == eos_id:
-            break
-        seq = torch.cat([seq, nxt[:, None]], dim=1)
-        out = forward_with_cache(model, cache, nxt[:, None], past_len=seq.shape[1] - 1)
-        logits, cache = out.logits, out.past_key_values
-    return new
 
 
 def load_prompts(path: Path) -> list[dict]:
@@ -69,8 +51,7 @@ def main() -> int:
                     help="prompt tokens the receiver runs itself on top of the mapped cache")
     args = ap.parse_args()
 
-    from kvtransfer import CrossModelTransfer, Mapper, encode_prompt, load_pair
-    from kvtransfer.hf import prefill
+    from kvtransfer import CrossModelTransfer, Mapper, load_pair
 
     cfg = load_config(args.config)
     dec, layout = cfg["decoding"], cfg["token_layout"]
@@ -81,9 +62,7 @@ def main() -> int:
     mapper_dir = args.mapper or cfg["mapper"]["cache_path"]
     src, tgt, tok = load_pair(cfg["sharer"]["model_id"], cfg["receiver"]["model_id"])
     xfer = CrossModelTransfer(src, tgt, Mapper.load(mapper_dir))
-    eos_id = tok.convert_tokens_to_ids("<|im_end|>")  # Qwen chat turn terminator
-    if eos_id is None or eos_id == tok.unk_token_id:
-        eos_id = tok.eos_token_id
+    eos_id = eos_token_id(tok)
 
     prompts = load_prompts(Path(args.prompts))
     mp = Path(mapper_dir)  # one folder per mapper so runs never overwrite each other
@@ -91,27 +70,20 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     records = []
     for i, item in enumerate(prompts):
-        ids = encode_prompt(tok, item["prompt"], chat=True, system=layout["system_prompt"],
-                            enable_thinking=dec["thinking_mode"])
+        ids = chat_ids(tok, item["prompt"], cfg)
         T = ids.shape[1]
-        starts = {
-            "native": (tgt, *prefill(tgt, ids.to(xfer.tgt_dev))),
-            "mapped": (tgt, *xfer.handoff(ids, hold_back=args.hold_back)),
-            "sharer": (src, *prefill(src, ids.to(xfer.src_dev))),
-        }
         rec = {"id": i, **item, "n_prompt_tokens": T, "n_mapped_tokens": T - args.hold_back,
                "receiver_runs": tok.decode(ids[0, T - args.hold_back:])}
         for cond in CONDITIONS:
-            model, logits, cache = starts[cond]
-            toks = greedy_decode(model, logits, cache, ids, args.max_new_tokens, eos_id)
+            model, logits, cache, past = start(cond, xfer, ids, args.hold_back)
+            toks = greedy_decode(model, logits, cache, past, args.max_new_tokens, eos_id)
             rec[cond] = tok.decode(toks, skip_special_tokens=True).strip()
             rec[f"{cond}_hit_limit"] = len(toks) >= args.max_new_tokens and toks[-1] != eos_id
             rec[f"label_{cond}"] = None  # fill by hand: refuse | comply | incoherent
         records.append(rec)
         print(f"[smoke] {i + 1}/{len(prompts)} {item['category']}: {item['prompt'][:60]}")
 
-    first = encode_prompt(tok, prompts[0]["prompt"], chat=True, system=layout["system_prompt"],
-                          enable_thinking=dec["thinking_mode"])
+    first = chat_ids(tok, prompts[0]["prompt"], cfg)
     header = {"pair_id": cfg["pair_id"], "mapper": mapper_dir, "hold_back": args.hold_back,
               "max_new_tokens": args.max_new_tokens, "thinking_mode": dec["thinking_mode"],
               "system_prompt": layout["system_prompt"],

@@ -101,3 +101,17 @@ section. Newest entries at the bottom of each day.
   so this may partly be "weaker model" behavior. Separating refusal loss from capability loss is
   exactly what the pilot is for. Hypothesis to test later: the mapped cache weakens chat-template
   conditioning (document-style continuations), which would hit refusals directly.
+- Pilot harness built (Phase 3 design, fixed BEFORE any pilot output exists):
+  prompts: HarmBench standard (200; centerforaisafety/HarmBench @ 8e1604d) + XSTest safe,
+  20 per type x 10 types (Paul/XSTest @ f600c99, seed 0); data/pilot/prompts.jsonl sha256
+  fbe418288436f7cb... Conditions: native, mapped, sharer; greedy, 256 new tokens, thinking off,
+  hold_back 1. Judge: Claude Sonnet 5 (claude-sonnet-5), effort medium, JSON-schema output,
+  rubric configs/judge_rubric.md (this commit), condition hidden from the judge; Message Batches.
+  Hand check: blinded sample, 12 random per condition + top-ups so each judge label appears >= 2
+  per condition; kappa reported on the random part. Stats: paired bootstrap over prompts (10k);
+  go = 95% CI of (refusal retention / capability retention) below 1.
+- Design note: the plan's Mismatched condition is degenerate under our layout. With hold_back=1
+  the receiver's own token is the final chat-template token, identical for every prompt, so
+  "prompt A on prompt B's mapped cache" is token-for-token Mapped(B). Dropped from the pilot.
+  A meaningful control needs the receiver to read the real prompt itself, e.g. hold_back = the
+  whole user turn on top of a donor's mapped context. To decide before Phase 4.

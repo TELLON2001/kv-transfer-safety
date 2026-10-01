@@ -31,6 +31,9 @@ lm-eval>=0.4.9                 # lm-evaluation-harness (kvtransfer's adapter flo
 # Pinned to the commit whose API scripts/reproduce.py was written against.
 kvtransfer[data,eval] @ git+https://github.com/Susmith4710/kvtransfer.git@04a8e99d1e1a364982065b23ca10183483924a97
 
+# --- pilot judge (Claude API, Message Batches) ---
+anthropic>=1.0
+
 # --- utilities ---
 tqdm>=4.66
 pyyaml>=6.0                    # experiment configs in configs/
