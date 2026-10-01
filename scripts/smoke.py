@@ -11,7 +11,7 @@ cache source is the only variable:
             tokens on top and decodes (kvtransfer CrossModelTransfer.handoff)
   sharer  : sharer prefills and decodes alone (the floor)
 
-Outputs go to results/smoke/<pair_id>/ (git-ignored: they may contain harmful completions):
+Outputs go to results/smoke/<pair_id>/<mapper>/ (git-ignored: they may contain harmful completions):
   smoke.jsonl  one record per prompt with all three completions and empty label fields
   smoke.md     side-by-side view for hand reading and labeling (refuse / comply / incoherent)
 
@@ -86,7 +86,8 @@ def main() -> int:
         eos_id = tok.eos_token_id
 
     prompts = load_prompts(Path(args.prompts))
-    out_dir = Path("results/smoke") / cfg["pair_id"]
+    mp = Path(mapper_dir)  # one folder per mapper so runs never overwrite each other
+    out_dir = Path("results/smoke") / cfg["pair_id"] / f"{mp.parent.name}_{mp.name}"
     out_dir.mkdir(parents=True, exist_ok=True)
     records = []
     for i, item in enumerate(prompts):
