@@ -51,7 +51,9 @@ def main() -> int:
                    suffix_len=args.suffix_len, progress=True)
     print(rep.summary())
 
-    out = Path("results/diagnostics") / cfg["pair_id"] / f"{Path(mapper_dir).name}.json"
+    # name by mapper run + k (e.g. qwen3-0p6b-to-1p7b-n100_k8) + eval size, so runs never overwrite
+    mp = Path(mapper_dir)
+    out = Path("results/diagnostics") / cfg["pair_id"] / f"{mp.parent.name}_{mp.name}_n{args.n_seqs}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep.to_dict(), indent=2))
     print(f"[diagnose] written to {out}")
