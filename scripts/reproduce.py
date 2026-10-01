@@ -98,13 +98,17 @@ def run_benchmark(cfg: dict, mapper_dir: str) -> dict:
     )
     out_dir = Path("results/reproduction") / cfg["pair_id"]
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / f"{task}.json").write_text(json.dumps(out["retention"], indent=2))
-    print(f"[eval] retention rows written to {out_dir / (task + '.json')}")
+    mp = Path(mapper_dir)  # name by mapper run + dir so different mappers never overwrite
+    out_file = out_dir / f"{task}_{mp.parent.name}_{mp.name}.json"
+    out_file.write_text(json.dumps(out["retention"], indent=2))
+    print(f"[eval] retention rows written to {out_file}")
     return out["retention"][0]
 
 
 def apply_overrides(cfg: dict, args) -> None:
     """Apply CLI overrides for quick runs without editing the config file."""
+    if args.mapper is not None:
+        cfg["mapper"]["cache_path"] = args.mapper
     if args.task is not None:
         cfg["reproduction"]["task"] = args.task
     if args.limit is not None:
@@ -127,6 +131,8 @@ def main() -> int:
     ap.add_argument("--n-seqs", type=int, default=None,
                     help="override calibration size; stats and mapper go to separate -n<N> paths")
     ap.add_argument("--fit-only", action="store_true", help="stop after the mapper is fitted")
+    ap.add_argument("--mapper", default=None,
+                    help="use an existing mapper dir (e.g. from refit.py) instead of mapper.cache_path")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
