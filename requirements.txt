@@ -9,7 +9,7 @@
 
 # --- core inference ---
 torch>=2.4                     # use the CUDA wheel matching your GPU driver
-transformers>=4.51            # Qwen3 support landed in 4.51
+transformers>=4.56            # kvtransfer's floor (Qwen3 itself landed in 4.51)
 accelerate>=0.34
 safetensors>=0.4
 huggingface_hub>=0.25
@@ -25,12 +25,11 @@ scipy>=1.13                    # closed-form / ridge solve
 scikit-learn>=1.5             # only if the repo uses sklearn Ridge; drop otherwise
 
 # --- reproducing the accuracy number ---
-lm-eval>=0.4.3                 # lm-evaluation-harness
+lm-eval>=0.4.9                 # lm-evaluation-harness (kvtransfer's adapter floor)
 
-# --- the mapper implementation (Heo et al.); not on PyPI ---
-# Install from source, pinned to a commit for reproducibility:
-#   pip install "git+https://github.com/Susmith4710/kvtransfer.git@<commit-sha>"
-# (record the SHA in research-log.md when you pin it)
+# --- the mapper implementation: independent reconstruction of Heo et al. (paper released no code) ---
+# Pinned to the commit whose API scripts/reproduce.py was written against.
+kvtransfer[data,eval] @ git+https://github.com/Susmith4710/kvtransfer.git@04a8e99d1e1a364982065b23ca10183483924a97
 
 # --- utilities ---
 tqdm>=4.66

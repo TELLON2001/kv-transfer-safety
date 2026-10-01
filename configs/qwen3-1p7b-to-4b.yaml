@@ -19,15 +19,24 @@ eligibility:
   num_key_value_heads: 8         # verified 2026-09-27: sharer 8 == receiver 8
   head_dim: 128                  # verified 2026-09-27: sharer 128 == receiver 128
 
-# Mapper (Heo et al. closed-form ridge). Confirm field names against the kvtransfer repo.
+# Mapper (Heo et al. closed-form ridge), via kvtransfer @ 04a8e99 (independent reconstruction;
+# the paper released no code). Field names below map onto kvtransfer.calibrate / Mapper.fit.
 mapper:
   kind: ridge                    # closed-form per-head ridge mapping
+  k: 8                           # source layers per target layer; paper picks k per pair by accuracy (8 or 12 for Qwen3)
+  lam: 0.01                      # ridge lambda (paper Sec. 3.1)
   calibration:
-    dataset: HuggingFaceFW/fineweb-edu
-    num_sequences: 500           # the paper calibrates on ~500 sequences
+    dataset: fineweb-edu         # kvtransfer.data.iter_dataset spec (HuggingFaceFW/fineweb-edu, streamed)
+    num_sequences: 500           # paper: 500 x 1,024 tokens, stride 4
     max_seq_len: 1024
-  strip_positional_encoding: true
-  cache_path: results/mappers/qwen3-1p7b-to-4b.pt   # save/reuse the fitted mapper
+    stride: 4
+    batch_size: 4
+  strip_positional_encoding: true   # true = content-space keys (paper Sec. 3.3); false = "-all RoPE" ablation
+  # Moments for 1.7B->4B are ~7.5 GB fp32 per kind (K and V = ~15 GB). On an L4 (24 GB) with both
+  # models loaded that does not fit on the GPU, so accumulate on CPU. On an A100 40GB+ use cuda.
+  stats_device: cpu
+  stats_path: results/stats/qwen3-1p7b-to-4b      # reusable for any k: a k sweep calibrates once
+  cache_path: results/mappers/qwen3-1p7b-to-4b/k8 # Mapper.save directory (safetensors + json)
 
 # Decoding is held IDENTICAL across every condition so the cache source is the only variable.
 decoding:
@@ -54,4 +63,6 @@ reproduction:
   task: null                     # lm-eval task name from the paper (fill in)
   reference_accuracy: null       # the paper's number for this pair+task
   tolerance_points: 3            # "within a few points" gate for the week-4 go/no-go
+  num_fewshot: null              # null = lm-eval task default (paper uses harness defaults; MMLU 5-shot)
+  metric: null                   # null = kvtransfer default (acc_norm, then acc, then exact_match)
   limit: null                    # optional: subsample for a fast first pass
