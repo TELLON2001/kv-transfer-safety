@@ -72,3 +72,15 @@ section. Newest entries at the bottom of each day.
   Broad optimum r=1e-4 to 1e-3 (1e-4 best KL/top-1, 1e-3 best cosine incl. worst layer);
   over-regularizes by 1e-2. Caveat: lambda chosen on the same 32 passages it is scored on;
   the capability rerun (independent benchmarks) is the clean check.
+- Step 4 rerun with regularized mappers (same tasks, limit 250, acc_norm; 1.7B alone and 0.6B
+  alone recomputed each run and identical to before):
+  | mapper              | arc_challenge mapped | hellaswag mapped |
+  | default lam=0.01    | 0.360 (sharer 0.352, receiver 0.452) | 0.424 (sharer 0.504, receiver 0.492) |
+  | r=1e-3 (lam=1503)   | 0.400  ret 88.5% / fn 74.3%          | 0.428  ret 87.0% / fn 73.6%          |
+  | r=1e-4 (lam=150)    | 0.392  ret 86.7% / fn 70.3%          | 0.432  ret 87.8% / fn 75.2%          |
+  ARC: regularization lifts mapped from sharer level to recovering ~40-48% of the 10-pt
+  receiver-over-sharer gap. HellaSwag: unchanged; mapped stays ~7 pts below BOTH models, so
+  that deficit is not the mid-layer V collapse. Open question. Candidate (untested): mapper is
+  calibrated/diagnosed on 1024-token windows, benchmark contexts are short; early positions
+  (attention-sink token) may map worse. Check with diagnostics on short prefixes.
+  Working choice for the smoke test: r=1e-3 (best attention cosine incl. worst layer; ties on ARC).
