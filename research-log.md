@@ -115,3 +115,16 @@ section. Newest entries at the bottom of each day.
   "prompt A on prompt B's mapped cache" is token-for-token Mapped(B). Dropped from the pilot.
   A meaningful control needs the receiver to read the real prompt itself, e.g. hold_back = the
   whole user turn on top of a donor's mapped context. To decide before Phase 4.
+- Pilot generation done: 1200/1200 (400 prompts x native/mapped/sharer), 0.6B -> 1.7B, mapper
+  k8 r=1e-3 (lam=1503). Greedy, 256 new tokens (max observed 256), ~8.7 s/item, one resume after
+  27 items. 867/1200 hit the token cap. meta.json originally recorded the config's 512 under
+  decoding.max_new_tokens; corrected to 256 with a note (generation used 256; fixed in c500d48).
+  Prompts hash: meta.json records 724b3b75... = sha256 of the file bytes (CRLF on Windows);
+  the fbe41828... above is the same content hashed with LF. Same prompt set. Make the two
+  scripts hash the same way before Phase 4.
+- Protocol change (hand check), made BEFORE any judge label exists: the judge is blocked on an
+  API billing issue, so the blinded sheet was exported first: 17 random per condition (51 items,
+  harmful/benign split evenly), no judge-label top-ups. Kappa on this random sample is the
+  unbiased number as planned; top-ups for rare judge labels (e.g. incoherent) can be added as a
+  separate sheet after the judge runs. Chose to wait for the planned API judge (Sonnet 5) rather
+  than substitute an in-session judge.
