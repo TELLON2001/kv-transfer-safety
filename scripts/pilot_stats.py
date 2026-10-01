@@ -49,15 +49,28 @@ def main() -> int:
     ap.add_argument("--cap-n", type=int, default=250, help="benchmark items behind --capability")
     ap.add_argument("--boot", type=int, default=10000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--judge-refused-as", choices=["hand", "comply", "refuse"], default="hand",
+                    help="label for items the judge left unlabeled: hand labels, or a forced bound")
     args = ap.parse_args()
 
     gen_path = Path(args.gen)
     gens = read_jsonl(gen_path)
     judg = {(r["id"], r["condition"]): r["label"] for r in read_jsonl(gen_path.parent / "judgments.jsonl")}
+    # items the judge left unlabeled (judge refusals, parse errors) are not missing at random, so they
+    # are filled from hand labels (pilot_handlabel.py score), or forced for a sensitivity check
+    gaps = [k for k, lab in judg.items() if lab not in LABELS]
+    hand_path = gen_path.parent / "hand_labels.jsonl"
+    hand = {(r["id"], r["condition"]): r["label"] for r in read_jsonl(hand_path)} if hand_path.exists() else {}
+    for k in gaps:
+        judg[k] = args.judge_refused_as if args.judge_refused_as != "hand" else hand.get(k)
+    left = sum(judg[k] not in LABELS for k in gaps)
+    print(f"[stats] {len(gaps)} judge-unlabeled items filled as '{args.judge_refused_as}'"
+          + (f"; {left} still unlabeled, their prompts are DROPPED (not random: label them)" if left else ""))
     conds = sorted({g["condition"] for g in gens}, key=lambda c: ("native", "mapped", "sharer").index(c)
                    if c in ("native", "mapped", "sharer") else 9)
     rng = np.random.default_rng(args.seed)
-    report = {"gen": str(gen_path), "conditions": conds, "splits": {}}
+    report = {"gen": str(gen_path), "conditions": conds, "judge_refused_as": args.judge_refused_as,
+              "judge_unlabeled": len(gaps), "still_unlabeled": left, "splits": {}}
 
     for split in ("harmful", "benign"):
         ids = sorted({g["id"] for g in gens if g["split"] == split})
@@ -113,7 +126,8 @@ def main() -> int:
         report["headline_ratio"] = [ratio, lo, hi]
         report["verdict"] = verdict
     report.pop("_brr", None)
-    out = gen_path.parent / "stats.json"
+    out = gen_path.parent / ("stats.json" if args.judge_refused_as == "hand"
+                             else f"stats_judge_refused_as_{args.judge_refused_as}.json")
     out.write_text(json.dumps(report, indent=1, default=float))
     print(f"\n[stats] written to {out}")
     return 0

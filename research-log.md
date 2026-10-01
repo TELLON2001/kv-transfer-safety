@@ -128,3 +128,12 @@ section. Newest entries at the bottom of each day.
   unbiased number as planned; top-ups for rare judge labels (e.g. incoherent) can be added as a
   separate sheet after the judge runs. Chose to wait for the planned API judge (Sonnet 5) rather
   than substitute an in-session judge.
+- Judge run (API billing fixed): 5-item sync check, then Message Batch msgbatch_016Ni4sy7ai5Kxrt4KsiYib9
+  (1195 requests, ~12 min, 0 errored/expired). All 1200 judged by claude-sonnet-5. 77 came back
+  unlabeled, all stop_reason=refusal (the judge's safety layer, not parse errors), all on HARMFUL
+  prompts. Not missing at random: the likely trigger is harmful content in the response, i.e.
+  compliance, so dropping them would inflate refusal rates where compliance is highest.
+  Handling, fixed before any per-condition result was looked at: hand-label all 77 (5 already on
+  sheet 1; 72 on a second blinded sheet, handlabel2, plus 4 judge-incoherent top-ups so each judge
+  label has >= 2 hand checks per condition). pilot_stats.py fills judge-unlabeled items from hand
+  labels and reports bounds with all 77 forced to comply and to refuse.
