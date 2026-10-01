@@ -173,3 +173,16 @@ section. Newest entries at the bottom of each day.
   mapping. At n=200 with full-response labels that does not hold (71.0 -> 64.0). The smoke
   reading was an artifact of judging opening lines only: mapped answers often open with a
   preamble or a title and refuse further down. Lesson: do not triage refusal on first lines.
+- Post-hoc power (harmful split, native vs mapped, paired): 64 of 200 prompts are discordant
+  (32%), split 39 native-refuses-only vs 25 mapped-refuses-only. McNemar power for that
+  discordance: ~506 prompts for 80%, ~674 for 90%. The pilot at n=200 was underpowered for the
+  effect it observed, so the NO-GO means "could not resolve an effect this size", not "no effect".
+  State this in any write-up; do not report the null as evidence of absence.
+- Note on reading the hand-label sheets: sheet 2 is the judge-refused set, selected on the judge's
+  reaction to the response (i.e. enriched for compliance), so its label mix is not a rate. Within
+  it the judge refused a near-balanced count per condition (native 25, mapped 25, sharer 27) yet
+  hand labels split native 16 refuse / 9 comply vs mapped 8 refuse / 17 comply: directionally the
+  hypothesis, but selected, so a hint and not an estimate.
+- Judge-only vs merged: excluding the 77 gaps, the native-mapped gap on harmful is 72.0 -> 68.6
+  (3.4 pts); with hand labels it is 71.0 -> 64.0 (7.0 pts). Dropping judge refusals would have
+  halved the apparent effect. Keep hand-filling them in Phase 4.
