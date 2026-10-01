@@ -56,3 +56,19 @@ section. Newest entries at the bottom of each day.
   capability. HellaSwag shows no 1.7B-over-0.6B gap for these chat checkpoints, so retention
   there is uninformative; ARC shows a 10-pt gap of which mapped recovers ~1 pt. Suspect the
   unstable mid-layer V weights; rerun after the lambda sweep.
+- Lambda sweep (refit.py from the n500 stats, k=8; same 32 held-out passages; sharer top-1 0.656).
+  Scale: mean centered diag of the V Gram = 1.50e6 (K: 5.45e5) over 128k tokens, so the paper's
+  lam=0.01 is r = lam/diag = 6.7e-9: effectively no regularization.
+  | lambda (r = rel. to V) | R2 V | min V R2, L11-15 | attn cos mean/min | KL mean/p95 | top-1 |
+  | 0.01 (r~7e-9, default) | 0.426 | -1.15 | 0.878 / 0.600 | 0.342 / 1.37 | 0.742 |
+  | 1.5   (r=1e-6)         | 0.672 |  0.53 | 0.905 / 0.619 | 0.271 / 1.03 | 0.797 |
+  | 15    (r=1e-5)         | 0.673 |  0.54 | 0.910 / 0.655 | 0.264 / 0.93 | 0.804 |
+  | 150   (r=1e-4)         | 0.673 |  0.54 | 0.918 / 0.736 | 0.246 / 0.91 | 0.807 |
+  | 1500  (r=1e-3)         | 0.670 |  0.54 | 0.925 / 0.864 | 0.253 / 0.94 | 0.804 |
+  | 15000 (r=1e-2)         | 0.658 |  0.54 | 0.922 / 0.860 | 0.284 / 1.04 | 0.788 |
+  Max ||W_V|| over layers: default 36.9k (layer 14) -> 2.4k at r=1e-6 -> 194 at r=1e-2.
+  CONFIRMED on diagnostics: any r >= 1e-6 removes the L11-15 value collapse; held-out V R2
+  0.43 -> 0.67, top-1 margin over sharer +8.6 -> +15 pts, worst-layer cosine 0.60 -> 0.86.
+  Broad optimum r=1e-4 to 1e-3 (1e-4 best KL/top-1, 1e-3 best cosine incl. worst layer);
+  over-regularizes by 1e-2. Caveat: lambda chosen on the same 32 passages it is scored on;
+  the capability rerun (independent benchmarks) is the clean check.
