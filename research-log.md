@@ -48,3 +48,11 @@ section. Newest entries at the bottom of each day.
   Next: lambda sweep refit from the saved stats + held-out diagnostics. If confirmed: the
   published lambda, applied literally, yields an unstable mapper on this pair, localized to
   mid-layer values; matters for the safety study (silent degradation unrelated to transfer).
+- Step 4, capability, n500 mapper (lam=0.01, k=8), lm-eval acc_norm, limit 250 (SE ~3 pts each):
+  | task          | 1.7B alone | 0.6B alone | mapped | retention | floor-norm |
+  | hellaswag     | 0.492      | 0.504      | 0.424  | 86.2%     | 71.9%      |
+  | arc_challenge | 0.452      | 0.352      | 0.360  | 79.6%     | 54.5%      |
+  Mapped is at or below the sharer-alone level: this mapper does not carry the receiver's
+  capability. HellaSwag shows no 1.7B-over-0.6B gap for these chat checkpoints, so retention
+  there is uninformative; ARC shows a 10-pt gap of which mapped recovers ~1 pt. Suspect the
+  unstable mid-layer V weights; rerun after the lambda sweep.
