@@ -137,3 +137,39 @@ section. Newest entries at the bottom of each day.
   sheet 1; 72 on a second blinded sheet, handlabel2, plus 4 judge-incoherent top-ups so each judge
   label has >= 2 hand checks per condition). pilot_stats.py fills judge-unlabeled items from hand
   labels and reports bounds with all 77 forced to comply and to refuse.
+- Hand labels done (user, both sheets, 127 items, no blanks). Judge agreement on the unbiased
+  random part: n=46, agreement 0.826, kappa 0.631 (substantial; no numeric threshold was
+  pre-registered). All items: n=50, kappa 0.573. By condition: native 0.92, mapped 0.84,
+  sharer 0.61 (the judge is least reliable on the weakest model's output). 1 item the user
+  called incoherent was judged comply: the failure mode the plan flags, small at this n.
+- PILOT RESULT (0.6B -> 1.7B stand-in pair, mapper k8 r=1e-3; 200 harmful + 200 benign, every
+  prompt labeled under all three conditions; judge labels plus hand labels for the 77 the judge
+  refused). Rates in %, 95% CI from a paired bootstrap over prompts (B=10k).
+  | split   | condition | refuse | comply | incoherent |
+  | harmful | native    |  71.0 |  27.0 |  2.0 |
+  | harmful | mapped    |  64.0 |  34.0 |  2.0 |
+  | harmful | sharer    |  45.0 |  47.0 |  8.0 |
+  | benign  | native    |   8.0 |  88.0 |  4.0 |
+  | benign  | mapped    |   7.0 |  87.5 |  5.5 |
+  | benign  | sharer    |  14.5 |  75.5 | 10.0 |
+  Harmful refuse, mapped - native: -7.0 pts [-15.0, +0.5].
+  Benign (over-refusal), mapped - native: -1.0 pts [-4.0, +1.5]:
+  no over-refusal increase under transfer.
+  Refusal retention (mapped/native, harmful): 0.901 [0.801, 1.008]
+  Capability retention (arc_challenge, n=250, native 0.452, mapped 0.400): 0.885 [0.718, 1.080]
+  HEADLINE refusal retention / capability retention: 1.019 [0.803, 1.292]
+  VERDICT: NO-GO by the plan's rule (CI includes or exceeds 1).
+  Both retentions fall together: refusal does NOT degrade faster than capability on this pair.
+  The pre-registered go rule (ratio CI below 1) is not met, so by the plan this is a NO-GO for
+  scaling this configuration as a positive safety finding; the null is itself publishable.
+  Sensitivity for the 77 judge refusals (all harmful), instead of hand labels:
+    all comply: refusal retention 0.952 [0.848, 1.066], ratio 1.076 [0.850, 1.367]
+    all refuse: refusal retention 0.960 [0.872, 1.056], ratio 1.085 [0.865, 1.364]
+  The conclusion is unchanged under both bounds, so it does not hinge on those 77 items.
+  Caveats: stand-in pair the paper never evaluated; mapper recovers only ~half the ARC gap, so
+  capability retention is measured on a weak mapper; capability CI uses a normal approximation
+  on n=250 and is wide; single mapper, single pair, greedy decoding, 256-token cap.
+  Note vs the smoke test: the n=10 opening-line triage suggested near-total refusal loss under
+  mapping. At n=200 with full-response labels that does not hold (71.0 -> 64.0). The smoke
+  reading was an artifact of judging opening lines only: mapped answers often open with a
+  preamble or a title and refuse further down. Lesson: do not triage refusal on first lines.
