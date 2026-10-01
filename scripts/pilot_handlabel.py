@@ -5,7 +5,11 @@
           --min-per-label times (rare labels such as incoherent would otherwise be missed). Items are
           shuffled together; the sheet shows only request and response (no condition, no judge label).
           Writes handlabel_sheet.csv (fill the `your_label` column) and handlabel_key.json.
-  score   reads the filled sheet and reports kappa vs the judge: on the random part (unbiased) and on
+          Works before the judge has run: with no judgments.jsonl it samples per condition, split
+          evenly between harmful and benign, with no top-ups. Refuses to overwrite a sheet that
+          already has labels in it.
+  score   reads the filled sheet and reports kappa vs the judge (labels read from judgments.jsonl at
+          scoring time, so the sheet can be exported first): on the random part (unbiased) and on
           everything, plus the confusion matrix and per-condition agreement.
 
 Usage:
@@ -29,6 +33,8 @@ def read_jsonl(path: Path) -> list[dict]:
 
 
 def latest_judgments(path: Path) -> dict[tuple, dict]:
+    if not path.exists():
+        return {}
     return {(r["id"], r["condition"]): r for r in read_jsonl(path)}  # last line per key wins
 
 
@@ -43,14 +49,30 @@ def cohen_kappa(a: list[str], b: list[str]) -> float:
 
 
 def export(gen_path: Path, per_cond: int, min_per_label: int, seed: int) -> None:
+    sheet = gen_path.parent / "handlabel_sheet.csv"
+    if sheet.exists():
+        with sheet.open(encoding="utf-8-sig", newline="") as fh:
+            if any(r["your_label"].strip() for r in csv.DictReader(fh)):
+                raise SystemExit(f"[handlabel] {sheet} already has labels; move it aside to re-export")
     gens = {(r["id"], r["condition"]): r for r in read_jsonl(gen_path)}
     judg = latest_judgments(gen_path.parent / "judgments.jsonl")
     rng = random.Random(seed)
+    picked = []  # (key, how)
+    if not judg:
+        # judge not run yet: random per condition, half harmful / half benign
+        by_cs = defaultdict(list)
+        for k in sorted(gens):
+            by_cs[(k[1], gens[k]["split"])].append(k)
+        for cond in sorted({c for c, _ in by_cs}):
+            splits = sorted(s for c, s in by_cs if c == cond)
+            for j, s in enumerate(splits):
+                n = per_cond // len(splits) + (j < per_cond % len(splits))
+                picked += [(k, "random") for k in rng.sample(by_cs[(cond, s)], n)]
+        print("[handlabel] no judgments yet: random sample only, no label top-ups")
     by_cond = defaultdict(list)
     for k in sorted(gens):
         if k in judg and judg[k]["label"] is not None:
             by_cond[k[1]].append(k)
-    picked = []  # (key, how)
     for cond in sorted(by_cond):
         keys = by_cond[cond]
         rand = rng.sample(keys, min(per_cond, len(keys)))
@@ -64,7 +86,6 @@ def export(gen_path: Path, per_cond: int, min_per_label: int, seed: int) -> None
     picked += [(k, "judge_unlabeled") for k, j in sorted(judg.items()) if j["label"] is None and k in gens]
     rng.shuffle(picked)
 
-    sheet = gen_path.parent / "handlabel_sheet.csv"
     with sheet.open("w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["item", "request", "response", "truncated", "your_label", "notes"])
@@ -72,7 +93,7 @@ def export(gen_path: Path, per_cond: int, min_per_label: int, seed: int) -> None
             g = gens[k]
             w.writerow([i, g["prompt"], g["response"], "yes" if g["hit_limit"] else "", "", ""])
     key = {str(i): {"id": k[0], "condition": k[1], "split": gens[k]["split"], "how": how,
-                    "judge_label": judg[k]["label"]} for i, (k, how) in enumerate(picked, 1)}
+                    "judge_label": judg.get(k, {}).get("label")} for i, (k, how) in enumerate(picked, 1)}
     (gen_path.parent / "handlabel_key.json").write_text(json.dumps(key, indent=1))
     print(f"[handlabel] {len(picked)} items -> {sheet}")
     print(f"[handlabel] fill `your_label` with one of {', '.join(LABELS)}; do not open handlabel_key.json first")
@@ -81,6 +102,13 @@ def export(gen_path: Path, per_cond: int, min_per_label: int, seed: int) -> None
 
 def score(gen_path: Path) -> None:
     key = json.loads((gen_path.parent / "handlabel_key.json").read_text())
+    judg = latest_judgments(gen_path.parent / "judgments.jsonl")
+    for v in key.values():  # current judge labels win over whatever existed at export time
+        j = judg.get((v["id"], v["condition"]))
+        if j is not None:
+            v["judge_label"] = j["label"]
+    if not any(v["judge_label"] in LABELS for v in key.values()):
+        raise SystemExit("[handlabel] no judge labels for these items yet; run pilot_judge.py collect first")
     with (gen_path.parent / "handlabel_sheet.csv").open(encoding="utf-8-sig", newline="") as fh:
         rows = {r["item"]: r["your_label"].strip().lower() for r in csv.DictReader(fh)}
     missing = [i for i, lab in rows.items() if lab not in LABELS]

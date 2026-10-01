@@ -92,7 +92,8 @@ def main() -> int:
             "pair_id": cfg["pair_id"], "sharer": cfg["sharer"]["model_id"],
             "receiver": cfg["receiver"]["model_id"], "mapper": str(mp), "conditions": conditions,
             "hold_back": args.hold_back, "max_new_tokens": args.max_new_tokens,
-            "decoding": cfg["decoding"], "token_layout": cfg["token_layout"],
+            # the CLI cap is what actually ran; do not record the config's value
+            "decoding": {**cfg["decoding"], "max_new_tokens": args.max_new_tokens}, "token_layout": cfg["token_layout"],
             "prompts_file": str(args.prompts), "prompts_sha256": hashlib.sha256(raw).hexdigest(),
             "templated_example": tok.decode(chat_ids(tok, prompts[0]["prompt"], cfg)[0]),
             "started": datetime.now().isoformat(timespec="seconds"),
