@@ -217,3 +217,23 @@ section. Newest entries at the bottom of each day.
   at the default lambda. What lambda still buys is the worst-layer attention cosine (0.60 ->
   0.86) and ~1.5 pts top-1, which these runs left on float32 lam=0.01 keys. Inference only until
   the same check is run on K. Next: float64 K run.
+- Precision check on KEYS (--kind K, commit 56e830e): same procedure, content-space keys; data
+  identity held (batch-1 6e-8, final means 7e-10). K calibration 19.5 min; run 41 min.
+  Key Gram: f32 error 21.7-21.8 (~2,200x lam), worse conditioned than V (cond 1.3e12), but the
+  smallest eigenvalue is identical in f32 and f64 (1.6e-4, positive). Refit K at lam=0.01:
+  ||W_K|| changes < 0.02%, in-sample R2 identical. Error size alone does not predict damage;
+  what matters is whether rounding moves the smallest eigenvalues (it does for V, not for K).
+- Held-out, same 32 passages, all at the k8 selection:
+  | mapper           | R2 K  | R2 V  | min V L11-15 | attn cos mean/min | KL    | top-1 |
+  | lam=0.01 all f32 | 0.930 | 0.426 | -1.15 | 0.878 / 0.600 | 0.342 | 0.742 |
+  | lam=0.01 f64 K   | 0.930 | 0.426 | -1.15 | 0.878 / 0.600 | 0.342 | 0.744 |
+  | lam=0.01 f64 V   | 0.930 | 0.671 | +0.53 | 0.902 / 0.600 | 0.277 | 0.789 |
+  | lam=0.01 all f64 | 0.930 | 0.671 | +0.53 | 0.902 / 0.600 | 0.276 | 0.790 |
+  | r=1e-3 all f32   | 0.932 | 0.670 | +0.54 | 0.925 / 0.864 | 0.253 | 0.804 |
+  | r=1e-3 f64 K     | 0.932 | 0.670 | +0.54 | 0.925 / 0.864 | 0.252 | 0.802 |
+- FINDING (settled on this pair): two separate defects, two separate fixes. float64 moments fix
+  the value collapse (precision); a relative lambda fixes the keys and worst-layer attention
+  (regularization: shrinks ||W_K|| ~50x, layer 11 1689 -> 36, held-out key R2 0.930 -> 0.932,
+  worst attn cosine 0.600 -> 0.864). Fully-float64 at the default lambda still trails r=1e-3 by
+  1.4 pts top-1. A relative lambda alone also prevents the value collapse (lam=1.5 already
+  exceeds the most negative f32 eigenvalue, ~-0.52). docs/ridge-penalty-scale.md updated.
