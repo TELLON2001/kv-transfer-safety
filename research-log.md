@@ -186,3 +186,34 @@ section. Newest entries at the bottom of each day.
 - Judge-only vs merged: excluding the 77 gaps, the native-mapped gap on harmful is 72.0 -> 68.6
   (3.4 pts); with hand labels it is 71.0 -> 64.0 (7.0 pts). Dropping judge refusals would have
   halved the apparent effect. Keep hand-filling them in Phase 4.
+
+## 2026-10-02
+- Precision check (scripts/precision_check.py, commit 7196bec): is the lam=0.01 mid-layer V
+  collapse float32 accumulation error or overfitting? kvtransfer accumulates Gram/Cross in
+  float32 (stats_dtype default) and solves in float64, so the saved stats cannot separate the
+  two. Re-accumulated V moments in float64 with stock kvtransfer.calibrate (same 500 seqs,
+  stride 4, batch 2); refit V per reference mapper at its own lambda and layer selection, K maps
+  copied unchanged. Data identity: batch-1 shift rel diff 4e-8, post-run means 7e-8, n=128000.
+  V calibration in float64: 21.7 min on CPU; whole run 39 min.
+- Gram comparison (centered value Gram of the selected source layers; NOTE targets 12-15 all
+  select sources 11-18, so there are two distinct matrices, not five):
+  | targets | f32 err (spectral) | / lam=0.01 | eig_min f64 | eig_min f32 | f64 eigs below f32 err |
+  | 11      | 15.4 | 1540x | +0.272 | -0.524 | 728 / 8192 |
+  | 12-15   | 14.0 | 1400x | +0.272 | -0.525 | 724 / 8192 |
+  Relative Frobenius error is only 4.2e-7, but float32 rounding makes the Gram indefinite;
+  lam=0.01 cannot restore positive definiteness. cond f64 8.3e8, f32 infinite.
+- V refit at lam=0.01, f32 -> f64: ||W_V|| 16-24x smaller (layer 14: 36.9k -> 1.9k; max entry
+  1048 -> 40); in-sample V R2 drops ~0.02 (f32 fit was fitting rounding noise). At r=1e-3 the
+  f32 and f64 fits are identical, so with a real penalty precision does not matter.
+- Held-out diagnostics, same 32 passages (V from float64 stats, K from the float32 reference):
+  | mapper              | R2 K  | R2 V  | min V R2 L11-15 | attn cos min | top-1 |
+  | lam=0.01, f32       | 0.930 | 0.426 | -1.15 | 0.600 | 0.742 |
+  | lam=0.01, f64 V     | 0.930 | 0.671 | +0.53 | 0.600 | 0.789 |
+  | r=1e-3,  f32        | 0.932 | 0.670 | +0.54 | 0.864 | 0.804 |
+  | r=1e-3,  f64 V      | 0.932 | 0.670 | +0.54 | 0.864 | 0.800 |
+  (0.804 vs 0.800 is 4 of 1024 tokens with weights equal to printed precision: near-tie flips.)
+- FINDING (revises 2026-10-01): the V collapse is float32 accumulation error, not overfitting on
+  collinear sources. float64 alone recovers held-out V R2 fully (0.671 vs best-regularized 0.670)
+  at the default lambda. What lambda still buys is the worst-layer attention cosine (0.60 ->
+  0.86) and ~1.5 pts top-1, which these runs left on float32 lam=0.01 keys. Inference only until
+  the same check is run on K. Next: float64 K run.
